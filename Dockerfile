@@ -1,6 +1,7 @@
 FROM golang:alpine as build
 
 WORKDIR /opt/app-root
+ENV GOPATH=/opt/app-root/
 COPY src src
 WORKDIR /opt/app-root/src/monkey/
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o monkey
