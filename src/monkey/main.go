@@ -26,8 +26,22 @@ return &Page{Title: filename, Body: body}, nil
 // HelloServer responds to requests with the given URL path.
 func HelloServer(w http.ResponseWriter, r *http.Request) {
 
-fmt.Fprintf(w, "Hello, you requested: %s\n", r.URL.Path)
-  glog.Info("Received request for path: %s", r.URL.Path)
+  logbol , found := os.LookupEnv("LOG_FILE")
+  logfile := os.Stdout
+
+  if !found || logbol == "no" {
+    glog.Info("no log file specified, using /dev/stdout")
+  } else {
+    
+    logfile, error := os.Create("./logs/monkey.log")
+
+    if error != nil {
+      fmt.Fprintf(os.Stderr, "Unable to Open File: %v for logs \n", logfile)    
+    }
+  }
+  fmt.Fprintf(w, "Hello, you requested: %s\n", r.URL.Path)
+  fmt.Fprintf(logfile, "Hello, you requested: %s\n", r.URL.Path)
+  
 }
 
 func ReadFile(w http.ResponseWriter, r *http.Request) {
@@ -55,14 +69,16 @@ h_workdir += "index.html"
 }
 
 func main() {
- port, found := os.LookupEnv("GO_PORT")
- if !found {
-  port = "8080"
- }
+ 
+  port, found := os.LookupEnv("GO_PORT")
+  
+  if !found {
+    port = "8080"
+  }
 
-http.HandleFunc("/api/", HelloServer)
- http.HandleFunc("/readfile/", ReadFile)
+  http.HandleFunc("/api/", HelloServer)
+  http.HandleFunc("/readfile/", ReadFile)
 
-log.Printf("Starting to listen on port %s", port)
- log.Fatal(http.ListenAndServe(":"+port, nil))
+  log.Printf("Starting to listen on port %s", port)
+  log.Fatal(http.ListenAndServe(":"+port, nil))
 }
